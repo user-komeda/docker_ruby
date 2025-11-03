@@ -1,6 +1,3 @@
-# =========================
-# ① ビルドステージ
-# =========================
 FROM almalinux:9-minimal AS builder
 
 # 開発ツール・依存ライブラリ
@@ -22,24 +19,7 @@ RUN wget https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.7.tar.gz && \
     ./configure --disable-install-doc --prefix=/opt/ruby --with-libyaml-dir=/opt/libyaml && \
     make -j$(nproc) && make install
 
-RUN /opt/ruby/bin/gem install json pg bigdecimal --no-document
-
-# =========================
-# ② 実行ステージ（軽量）
-# =========================
-FROM almalinux:9-minimal
-
-# 実行に必要なランタイムライブラリ
-RUN microdnf -y install openssl readline zlib libffi && microdnf clean all
-
-# Ruby と libyaml をコピー
-COPY --from=builder /opt/ruby /opt/ruby
-COPY --from=builder /opt/libyaml /opt/libyaml
-
 ENV PATH="/opt/ruby/bin:$PATH"
 
-# Bundler をインストール
 RUN gem install bundler --no-document
 
-# 起動確認・常駐
-CMD ["sh", "-c", "ruby -v && gem list bundler && tail -f /dev/null"]
