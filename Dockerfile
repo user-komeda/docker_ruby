@@ -22,7 +22,7 @@ RUN wget https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.7.tar.gz && \
     ./configure --disable-install-doc --prefix=/opt/ruby --with-libyaml-dir=/opt/libyaml && \
     make -j$(nproc) && make install
 
-RUN /opt/ruby/bin/gem install bundler json bigdecimal --no-document
+RUN /opt/ruby/bin/gem install json bigdecimal --no-document
 
 # =========================
 # ② 実行ステージ（軽量）
@@ -36,10 +36,13 @@ RUN microdnf -y install openssl readline zlib libffi && microdnf clean all
 COPY --from=builder /opt/ruby /opt/ruby
 COPY --from=builder /opt/libyaml /opt/libyaml
 
-ENV PATH="/opt/ruby/bin:${PATH}"
+
 
 # Bundler をインストール
 RUN gem install bundler --no-document
+
+ENV GEM_PATH="/opt/ruby/lib/ruby/gems/3.4.0"
+ENV PATH="/opt/ruby/bin:$PATH"
 
 # 起動確認・常駐
 CMD ["sh", "-c", "ruby -v && gem list bundler && tail -f /dev/null"]
