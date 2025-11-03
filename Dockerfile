@@ -1,27 +1,42 @@
-FROM almalinux:minimal
+# =========================
+# ① ビルドステージ
+# =========================
+FROM almalinux:9-minimal AS builder
 
-RUN mkdir /tmp_build
+# 開発ツール・依存ライブラリ
+RUN microdnf -y install gcc make wget tar bzip2 \
+    openssl-devel readline-devel zlib-devel libffi-devel && \
+    microdnf clean all
 
-# Rails app lives here
-WORKDIR /tmp_build
-# Set production environmen
+WORKDIR /tmp
 
-ENV NODE_VERSION 20.15.0
-RUN microdnf -y install --enablerepo=crb tar make gcc xz python3 nodejs g++ zlib-devel openssl-devel readline-devel libffi-devel libyaml-devel
-# Install packages needed to build gems
-RUN curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.xz"
-RUN tar -xf "node-v$NODE_VERSION.tar.xz"
-RUN cd "node-v$NODE_VERSION" && ./configure && make -j$(getconf _NPROCESSORS_ONLN) && make install
-RUN corepack enable yarn
-RUN yarn set version stable -f
+# libyaml をソースからビルド
+RUN wget https://pyyaml.org/download/libyaml/yaml-0.2.5.tar.gz && \
+    tar -xzf yaml-0.2.5.tar.gz && cd yaml-0.2.5 && \
+    ./configure --prefix=/opt/libyaml && make && make install
 
-# Install packages needed to build gems
+# Ruby 3.4.7 をビルド（libyaml を指定）
+RUN wget https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.7.tar.gz && \
+    tar -xzf ruby-3.4.7.tar.gz && cd ruby-3.4.7 && \
+    ./configure --disable-install-doc --prefix=/opt/ruby --with-libyaml-dir=/opt/libyaml && \
+    make -j$(nproc) && make install
 
-RUN curl -O https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.4.tar.gz
+# =========================
+# ② 実行ステージ（軽量）
+# =========================
+FROM almalinux:9-minimal
 
-RUN tar zxvf ruby-3.3.4.tar.gz
+# 実行に必要なランタイムライブラリ
+RUN microdnf -y install openssl readline zlib libffi && microdnf clean all
 
-RUN cd /tmp_build/ruby-3.3.4 && ./configure &&  make -j$(getconf _NPROCESSORS_ONLN)&& make install
+# Ruby と libyaml をコピー
+COPY --from=builder /opt/ruby /opt/ruby
+COPY --from=builder /opt/libyaml /opt/libyaml
 
-RUN rm -rf /tmp_build
-RUN gem install bundler
+ENV PATH="/opt/ruby/bin:${PATH}"
+
+# Bundler をインストール
+RUN gem install bundler --no-document
+
+# 起動確認・常駐
+CMD ["sh", "-c", "ruby -v && gem list bundler && tail -f /dev/null"]
