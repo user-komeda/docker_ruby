@@ -16,7 +16,7 @@ RUN wget https://pyyaml.org/download/libyaml/yaml-0.2.5.tar.gz && \
 # Ruby 3.4.7 をビルド（libyaml を指定）
 RUN wget https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.7.tar.gz && \
     tar -xzf ruby-3.4.7.tar.gz && cd ruby-3.4.7 && \
-    ./configure --disable-install-doc --prefix=/opt/ruby --with-libyaml-dir=/opt/libyaml && \
+    ./configure --disable-install-doc --prefix=/usr/local --with-libyaml-dir=/opt/libyaml && \
     make -j$(nproc) && make install
 
 ENV PATH="/opt/ruby/bin:$PATH"
