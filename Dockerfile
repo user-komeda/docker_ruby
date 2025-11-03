@@ -15,11 +15,14 @@ RUN wget https://pyyaml.org/download/libyaml/yaml-0.2.5.tar.gz && \
     tar -xzf yaml-0.2.5.tar.gz && cd yaml-0.2.5 && \
     ./configure --prefix=/opt/libyaml && make && make install
 
+
 # Ruby 3.4.7 をビルド（libyaml を指定）
 RUN wget https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.7.tar.gz && \
     tar -xzf ruby-3.4.7.tar.gz && cd ruby-3.4.7 && \
     ./configure --disable-install-doc --prefix=/opt/ruby --with-libyaml-dir=/opt/libyaml && \
     make -j$(nproc) && make install
+
+RUN /opt/ruby/bin/gem install bundler json bigdecimal --no-document
 
 # =========================
 # ② 実行ステージ（軽量）
