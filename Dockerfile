@@ -1,25 +1,21 @@
 FROM almalinux:9-minimal AS builder
 
-# 開発ツール・依存ライブラリ
+ARG RUBY_VERSION=4.0.5
+ARG LIBYAML_VERSION=0.2.5
+
 RUN microdnf -y install gcc make wget tar bzip2 \
     openssl-devel readline-devel zlib-devel libffi-devel && \
     microdnf clean all
 
 WORKDIR /tmp
 
-# libyaml をソースからビルド
-RUN wget https://pyyaml.org/download/libyaml/yaml-0.2.5.tar.gz && \
-    tar -xzf yaml-0.2.5.tar.gz && cd yaml-0.2.5 && \
+RUN wget https://pyyaml.org/download/libyaml/yaml-${LIBYAML_VERSION}.tar.gz && \
+    tar -xzf yaml-${LIBYAML_VERSION}.tar.gz && cd yaml-${LIBYAML_VERSION} && \
     ./configure --prefix=/opt/libyaml && make && make install
 
-
-# Ruby 3.4.7 をビルド（libyaml を指定）
-RUN wget https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.7.tar.gz && \
-    tar -xzf ruby-3.4.7.tar.gz && cd ruby-3.4.7 && \
+RUN wget https://cache.ruby-lang.org/pub/ruby/${RUBY_VERSION%.*}/ruby-${RUBY_VERSION}.tar.gz && \
+    tar -xzf ruby-${RUBY_VERSION}.tar.gz && cd ruby-${RUBY_VERSION} && \
     ./configure --disable-install-doc --prefix=/usr/local --with-libyaml-dir=/opt/libyaml && \
     make -j$(nproc) && make install
 
-ENV PATH="/opt/ruby/bin:$PATH"
-
 RUN gem install bundler --no-document
-
