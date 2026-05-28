@@ -1,0 +1,15 @@
+{
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": [
+        "ARG RUBY_VERSION=(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "ruby",
+      "datasourceTemplate": "ruby-version",
+      "versioningTemplate": "ruby"
+    }
+  ]
+}
