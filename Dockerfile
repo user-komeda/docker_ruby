@@ -1,4 +1,4 @@
-FROM almalinux:9-minimal AS builder
+FROM almalinux:10-minimal AS builder
 
 ARG RUBY_VERSION=4.0.5
 ARG LIBYAML_VERSION=0.2.5
