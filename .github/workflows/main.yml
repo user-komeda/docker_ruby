@@ -41,7 +41,7 @@ jobs:
             org.opencontainers.image.vendor="AP Communications Co.,Ltd."
             org.opencontainers.image.licenses=Apache-2.0
       - name: "コンテナイメージをビルドしてghcr.ioにコンテナイメージをpushする"
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           file: ../Dockerfile
           push: true
